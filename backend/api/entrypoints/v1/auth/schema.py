@@ -78,6 +78,8 @@ class AuthResponse(BaseModel):
     success: bool
     message: str
     user: Optional[UserResponse] = None
+    reset_token: Optional[str] = None
+    reset_url: Optional[str] = None
 
 
 class TokenValidateResponse(BaseModel):

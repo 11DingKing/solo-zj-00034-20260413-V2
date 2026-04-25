@@ -1,7 +1,7 @@
 <template>
   <div id="auth-container">
     <h2 class="title">Forgot Password</h2>
-    
+
     <v-alert
       v-if="errorMessage"
       type="error"
@@ -12,21 +12,17 @@
     >
       {{ errorMessage }}
     </v-alert>
-    
-    <v-alert
-      v-if="successMessage"
-      type="success"
-      dense
-      class="alert"
-    >
+
+    <v-alert v-if="successMessage" type="success" dense class="alert">
       {{ successMessage }}
     </v-alert>
-    
+
     <form v-if="!emailSent" @submit.prevent="handleRequestReset">
       <p class="description">
-        Enter your email address and we'll send you a link to reset your password.
+        Enter your email address and we'll send you a link to reset your
+        password.
       </p>
-      
+
       <v-text-field
         v-model="email"
         label="Email"
@@ -36,27 +32,24 @@
         class="input-field"
         variant="outlined"
       />
-      
-      <button
-        type="submit"
-        class="button"
-        :disabled="loading || !email"
-      >
+
+      <button type="submit" class="button" :disabled="loading || !email">
         <span v-if="loading">Sending...</span>
         <span v-else>Send Reset Link</span>
       </button>
     </form>
-    
+
     <div v-else class="success-container">
       <v-icon size="64" color="#4caf50">mdi-email-check</v-icon>
       <p class="success-text">
-        If an account exists for <strong>{{ email }}</strong>, you will receive a password reset email shortly.
+        If an account exists for <strong>{{ email }}</strong
+        >, you will receive a password reset email shortly.
       </p>
       <p class="note">
         The link will expire in 15 minutes and can only be used once.
       </p>
     </div>
-    
+
     <div class="login-link">
       Remember your password? <router-link to="/login">Login</router-link>
     </div>
@@ -65,6 +58,9 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const email = ref("");
 const loading = ref(false);
@@ -83,7 +79,8 @@ const handleRequestReset = async () => {
 
   try {
     const response = await fetch(
-      import.meta.env.VITE_APP_BACKEND_ROOT_ENDPOINT + "v1/auth/password-reset/request",
+      import.meta.env.VITE_APP_BACKEND_ROOT_ENDPOINT +
+        "v1/auth/password-reset/request",
       {
         method: "POST",
         headers: {
@@ -92,14 +89,25 @@ const handleRequestReset = async () => {
         body: JSON.stringify({
           email: email.value,
         }),
-      }
+      },
     );
 
     const data = await response.json();
 
     if (response.ok) {
-      emailSent.value = true;
-      successMessage.value = data.message;
+      if (data.reset_token) {
+        successMessage.value =
+          "Reset token generated. Redirecting to reset page...";
+        setTimeout(() => {
+          router.push({
+            path: "/reset-password",
+            query: { token: data.reset_token },
+          });
+        }, 1000);
+      } else {
+        emailSent.value = true;
+        successMessage.value = data.message;
+      }
     } else {
       errorMessage.value = data.detail || "Failed to send reset link";
     }
@@ -211,12 +219,12 @@ form {
   margin-top: 20px;
   font-size: 14px;
   color: #666;
-  
+
   a {
     color: #4caf50;
     text-decoration: none;
     font-weight: bold;
-    
+
     &:hover {
       text-decoration: underline;
     }

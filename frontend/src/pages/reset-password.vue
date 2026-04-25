@@ -72,6 +72,10 @@
               <v-icon>{{ hasLetter ? 'mdi-check' : 'mdi-close' }}</v-icon>
               Contains at least one letter
             </div>
+            <div :class="{ valid: hasSpecialChar }">
+              <v-icon>{{ hasSpecialChar ? 'mdi-check' : 'mdi-close' }}</v-icon>
+              Contains at least one special character
+            </div>
           </div>
         </div>
         
@@ -156,6 +160,7 @@ const passwordStrength = ref({ level: 0, label: "", color: "#999" });
 
 const hasNumber = computed(() => /\d/.test(newPassword.value));
 const hasLetter = computed(() => /[a-zA-Z]/.test(newPassword.value));
+const hasSpecialChar = computed(() => /[^a-zA-Z0-9]/.test(newPassword.value));
 
 const strengthPercentage = computed(() => {
   const level = passwordStrength.value.level;

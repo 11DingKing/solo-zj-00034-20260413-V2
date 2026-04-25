@@ -1,7 +1,7 @@
 <template>
   <div id="auth-container">
     <h2 class="title">Register</h2>
-    
+
     <v-alert
       v-if="errorMessage"
       type="error"
@@ -12,7 +12,7 @@
     >
       {{ errorMessage }}
     </v-alert>
-    
+
     <form @submit.prevent="handleRegister">
       <v-text-field
         v-model="email"
@@ -23,7 +23,7 @@
         class="input-field"
         variant="outlined"
       />
-      
+
       <v-text-field
         v-model="password"
         label="Password"
@@ -36,36 +36,42 @@
         @click:append-inner="showPassword = !showPassword"
         @input="updatePasswordStrength"
       />
-      
+
       <div v-if="password" class="password-strength">
         <div class="strength-label" :style="{ color: passwordStrength.color }">
           Password strength: {{ passwordStrength.label }}
         </div>
         <div class="strength-bar">
-          <div 
-            class="strength-fill" 
-            :style="{ 
-              width: strengthPercentage, 
-              backgroundColor: passwordStrength.color 
+          <div
+            class="strength-fill"
+            :style="{
+              width: strengthPercentage,
+              backgroundColor: passwordStrength.color,
             }"
           ></div>
         </div>
         <div class="password-requirements">
           <div :class="{ valid: password.length >= 8 }">
-            <v-icon>{{ password.length >= 8 ? 'mdi-check' : 'mdi-close' }}</v-icon>
+            <v-icon>{{
+              password.length >= 8 ? "mdi-check" : "mdi-close"
+            }}</v-icon>
             At least 8 characters
           </div>
           <div :class="{ valid: hasNumber }">
-            <v-icon>{{ hasNumber ? 'mdi-check' : 'mdi-close' }}</v-icon>
+            <v-icon>{{ hasNumber ? "mdi-check" : "mdi-close" }}</v-icon>
             Contains at least one digit
           </div>
           <div :class="{ valid: hasLetter }">
-            <v-icon>{{ hasLetter ? 'mdi-check' : 'mdi-close' }}</v-icon>
+            <v-icon>{{ hasLetter ? "mdi-check" : "mdi-close" }}</v-icon>
             Contains at least one letter
+          </div>
+          <div :class="{ valid: hasSpecialChar }">
+            <v-icon>{{ hasSpecialChar ? "mdi-check" : "mdi-close" }}</v-icon>
+            Contains at least one special character
           </div>
         </div>
       </div>
-      
+
       <v-text-field
         v-model="confirmPassword"
         label="Confirm Password"
@@ -77,17 +83,13 @@
         :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
         @click:append-inner="showConfirmPassword = !showConfirmPassword"
       />
-      
-      <button
-        type="submit"
-        class="button"
-        :disabled="loading || !isFormValid"
-      >
+
+      <button type="submit" class="button" :disabled="loading || !isFormValid">
         <span v-if="loading">Registering...</span>
         <span v-else>Register</span>
       </button>
     </form>
-    
+
     <div class="login-link">
       Already have an account? <router-link to="/login">Login</router-link>
     </div>
@@ -97,7 +99,10 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import { validatePasswordStrength, getPasswordStrength } from "@/utils/passwordValidator";
+import {
+  validatePasswordStrength,
+  getPasswordStrength,
+} from "@/utils/passwordValidator";
 
 const router = useRouter();
 
@@ -112,6 +117,7 @@ const passwordStrength = ref({ level: 0, label: "", color: "#999" });
 
 const hasNumber = computed(() => /\d/.test(password.value));
 const hasLetter = computed(() => /[a-zA-Z]/.test(password.value));
+const hasSpecialChar = computed(() => /[^a-zA-Z0-9]/.test(password.value));
 
 const strengthPercentage = computed(() => {
   const level = passwordStrength.value.level;
@@ -164,7 +170,7 @@ const handleRegister = async () => {
           password: password.value,
           confirm_password: confirmPassword.value,
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -249,17 +255,17 @@ form {
 .password-requirements {
   font-size: 12px;
   color: #666;
-  
+
   div {
     display: flex;
     align-items: center;
     gap: 5px;
     margin: 3px 0;
-    
+
     &.valid {
       color: #4caf50;
     }
-    
+
     .v-icon {
       font-size: 14px;
     }
@@ -301,12 +307,12 @@ form {
   margin-top: 20px;
   font-size: 14px;
   color: #666;
-  
+
   a {
     color: #4caf50;
     text-decoration: none;
     font-weight: bold;
-    
+
     &:hover {
       text-decoration: underline;
     }

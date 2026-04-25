@@ -1,7 +1,7 @@
 <template>
   <div id="auth-container">
     <h2 class="title">Login</h2>
-    
+
     <v-alert
       v-if="errorMessage"
       type="error"
@@ -12,7 +12,7 @@
     >
       {{ errorMessage }}
     </v-alert>
-    
+
     <v-alert
       v-if="successMessage"
       type="success"
@@ -23,7 +23,7 @@
     >
       {{ successMessage }}
     </v-alert>
-    
+
     <form @submit.prevent="handleLogin">
       <v-text-field
         v-model="email"
@@ -34,7 +34,7 @@
         class="input-field"
         variant="outlined"
       />
-      
+
       <v-text-field
         v-model="password"
         label="Password"
@@ -46,21 +46,17 @@
         :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
         @click:append-inner="showPassword = !showPassword"
       />
-      
+
       <div class="forgot-password-link">
         <router-link to="/forgot-password">Forgot your password?</router-link>
       </div>
-      
-      <button
-        type="submit"
-        class="button"
-        :disabled="loading"
-      >
+
+      <button type="submit" class="button" :disabled="loading">
         <span v-if="loading">Logging in...</span>
         <span v-else>Login</span>
       </button>
     </form>
-    
+
     <div class="register-link">
       Don't have an account? <router-link to="/register">Register</router-link>
     </div>
@@ -69,9 +65,12 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { useAppStore } from "@/store/app";
 
 const route = useRoute();
+const router = useRouter();
+const appStore = useAppStore();
 
 const email = ref("");
 const password = ref("");
@@ -82,7 +81,8 @@ const successMessage = ref("");
 
 onMounted(() => {
   if (route.query.reset === "success") {
-    successMessage.value = "Password reset successful! Please login with your new password.";
+    successMessage.value =
+      "Password reset successful! Please login with your new password.";
   }
   if (route.query.registered === "true") {
     successMessage.value = "Registration successful! Please login.";
@@ -110,14 +110,19 @@ const handleLogin = async () => {
           email: email.value,
           password: password.value,
         }),
-      }
+      },
     );
 
     const data = await response.json();
 
     if (response.ok) {
+      const token =
+        data.token || appStore.generateToken(data.user.id, data.user.email);
+      appStore.setAuth(token, data.user);
       successMessage.value = "Login successful!";
-      console.log("User logged in:", data.user);
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
     } else {
       errorMessage.value = data.detail || "Login failed";
     }
@@ -170,11 +175,11 @@ form {
 .forgot-password-link {
   text-align: right;
   font-size: 14px;
-  
+
   a {
     color: #4caf50;
     text-decoration: none;
-    
+
     &:hover {
       text-decoration: underline;
     }
@@ -216,12 +221,12 @@ form {
   margin-top: 20px;
   font-size: 14px;
   color: #666;
-  
+
   a {
     color: #4caf50;
     text-decoration: none;
     font-weight: bold;
-    
+
     &:hover {
       text-decoration: underline;
     }

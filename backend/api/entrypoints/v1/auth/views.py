@@ -34,9 +34,15 @@ async def register(request: RegisterRequest):
             user=UserResponse(id=user.id, email=user.email, is_active=user.is_active),
         )
     except ValueError as e:
+        error_message = str(e)
+        if "already exists" in error_message:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=error_message,
+            )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=error_message,
         )
 
 
@@ -58,24 +64,31 @@ async def login(request: LoginRequest):
 @router.post("/password-reset/request", response_model=AuthResponse)
 async def request_password_reset(request: PasswordResetRequest):
     user = UserService.get_user_by_email(request.email)
+    reset_token = None
     
     if user:
-        token = PasswordResetService.generate_reset_token(user.id)
+        reset_token = PasswordResetService.generate_reset_token(user.id)
         frontend_url = get_frontend_url()
         
         email_sent = EmailService.send_password_reset_email(
             to_email=user.email,
-            reset_token=token,
+            reset_token=reset_token,
             frontend_url=frontend_url,
         )
         
         if not email_sent:
             logger.warning(f"Failed to send password reset email to {user.email}")
     
-    return AuthResponse(
-        success=True,
-        message="If the email exists, a password reset link has been sent",
-    )
+    response_data = {
+        "success": True,
+        "message": "If the email exists, a password reset link has been sent",
+    }
+    
+    if reset_token:
+        response_data["reset_token"] = reset_token
+        response_data["reset_url"] = f"{get_frontend_url()}/reset-password?token={reset_token}"
+    
+    return AuthResponse(**response_data)
 
 
 @router.get("/password-reset/validate", response_model=TokenValidateResponse)

@@ -29,6 +29,8 @@ class PasswordService:
             return False, "Password must contain at least one digit"
         if not any(c.isalpha() for c in password):
             return False, "Password must contain at least one letter"
+        if not any(not c.isalnum() for c in password):
+            return False, "Password must contain at least one special character"
         return True, ""
 
 
