@@ -1,56 +1,66 @@
 import { defineStore } from "pinia";
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 
 const STORAGE_KEY = "auth_token";
 const STORAGE_USER_KEY = "auth_user";
 
+interface User {
+  id: number;
+  email: string;
+  username: string;
+  is_active: boolean;
+}
+
+let isInitialized = false;
+
 export const useAppStore = defineStore("app", () => {
-  const token = ref<string | null>(localStorage.getItem(STORAGE_KEY));
-  const user = ref<{ id: number; email: string; is_active: boolean } | null>(
-    null,
-  );
+  const token = ref<string | null>(null);
+  const user = ref<User | null>(null);
 
   const isAuthenticated = computed(() => !!token.value);
 
-  watch(token, (newToken) => {
-    if (newToken) {
-      localStorage.setItem(STORAGE_KEY, newToken);
+  function saveToStorage() {
+    if (token.value) {
+      localStorage.setItem(STORAGE_KEY, token.value);
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  });
-
-  watch(user, (newUser) => {
-    if (newUser) {
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(newUser));
+    if (user.value) {
+      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user.value));
     } else {
       localStorage.removeItem(STORAGE_USER_KEY);
     }
-  });
-
-  function initializeAuth() {
-    const savedToken = localStorage.getItem(STORAGE_KEY);
-    const savedUser = localStorage.getItem(STORAGE_USER_KEY);
-
-    if (savedToken) {
-      token.value = savedToken;
-    }
-
-    if (savedUser) {
-      try {
-        user.value = JSON.parse(savedUser);
-      } catch {
-        user.value = null;
-      }
-    }
   }
 
-  function setAuth(
-    newToken: string,
-    newUser: { id: number; email: string; is_active: boolean },
-  ) {
+  function initializeAuth() {
+    if (isInitialized) return;
+    
+    try {
+      const savedToken = localStorage.getItem(STORAGE_KEY);
+      const savedUser = localStorage.getItem(STORAGE_USER_KEY);
+
+      if (savedToken) {
+        token.value = savedToken;
+      }
+
+      if (savedUser) {
+        try {
+          user.value = JSON.parse(savedUser);
+        } catch {
+          user.value = null;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to initialize auth:", e);
+    }
+    
+    isInitialized = true;
+  }
+
+  function setAuth(newToken: string, newUser: User) {
     token.value = newToken;
     user.value = newUser;
+    saveToStorage();
   }
 
   function clearAuth() {
@@ -58,6 +68,7 @@ export const useAppStore = defineStore("app", () => {
     user.value = null;
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
+    isInitialized = false;
   }
 
   function generateToken(userId: number, email: string): string {

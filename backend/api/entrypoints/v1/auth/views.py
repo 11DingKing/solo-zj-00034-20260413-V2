@@ -26,12 +26,12 @@ def get_frontend_url() -> str:
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def register(request: RegisterRequest):
     try:
-        user_create = UserCreate(email=request.email, password=request.password)
+        user_create = UserCreate(email=request.email, username=request.username, password=request.password)
         user = UserService.create_user(user_create)
         return AuthResponse(
             success=True,
             message="User registered successfully",
-            user=UserResponse(id=user.id, email=user.email, is_active=user.is_active),
+            user=UserResponse(id=user.id, email=user.email, username=user.username, is_active=user.is_active),
         )
     except ValueError as e:
         error_message = str(e)
@@ -57,7 +57,7 @@ async def login(request: LoginRequest):
     return AuthResponse(
         success=True,
         message="Login successful",
-        user=UserResponse(id=user.id, email=user.email, is_active=user.is_active),
+        user=UserResponse(id=user.id, email=user.email, username=user.username, is_active=user.is_active),
     )
 
 

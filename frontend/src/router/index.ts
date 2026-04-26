@@ -23,8 +23,6 @@ const publicRoutes = [
 router.beforeEach((to, _from, next) => {
   const appStore = useAppStore();
 
-  appStore.initializeAuth();
-
   const isPublicRoute = publicRoutes.some((route) => to.path.startsWith(route));
   const isAuthenticated = appStore.isAuthenticated;
 
@@ -55,7 +53,7 @@ router.afterEach((to) => {
       meta.setAttribute("name", "cache-control");
       window.document.head.appendChild(meta);
     }
-    meta.setAttribute("content", "no-cache, no-store, must-revalidate");
+    meta.setAttribute("content", "no-cache, no-store, must-revalidate, max-age=0");
 
     let pragma = window.document.querySelector('meta[name="pragma"]');
     if (!pragma) {

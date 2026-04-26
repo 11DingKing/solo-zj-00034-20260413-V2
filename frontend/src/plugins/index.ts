@@ -8,10 +8,14 @@
 import vuetify from "./vuetify";
 import pinia from "../store";
 import router from "../router";
+import { useAppStore } from "@/store/app";
 
 // Types
 import type { App } from "vue";
 
 export function registerPlugins(app: App) {
-  app.use(vuetify).use(router).use(pinia);
+  app.use(vuetify).use(pinia).use(router);
+  
+  const appStore = useAppStore();
+  appStore.initializeAuth();
 }

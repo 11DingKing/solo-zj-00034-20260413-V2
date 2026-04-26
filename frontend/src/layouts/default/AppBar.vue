@@ -28,6 +28,6 @@ const isAuthenticated = computed(() => appStore.isAuthenticated);
 
 const handleLogout = () => {
   appStore.clearAuth();
-  router.replace("/login");
+  window.location.replace("/login");
 };
 </script>

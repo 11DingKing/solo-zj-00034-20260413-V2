@@ -37,12 +37,16 @@ class PasswordService:
 class UserService:
     _users: Dict[int, User] = {}
     _email_to_id: Dict[str, int] = {}
+    _username_to_id: Dict[str, int] = {}
     _next_id: int = 1
 
     @classmethod
     def create_user(cls, user_create: UserCreate) -> UserResponse:
         if user_create.email in cls._email_to_id:
             raise ValueError("User with this email already exists")
+        
+        if user_create.username in cls._username_to_id:
+            raise ValueError("User with this username already exists")
 
         is_valid, error_msg = PasswordService.validate_password_strength(user_create.password)
         if not is_valid:
@@ -52,6 +56,7 @@ class UserService:
         user = User(
             id=cls._next_id,
             email=user_create.email,
+            username=user_create.username,
             password_hash=password_hash,
             created_at=datetime.now(),
             is_active=True,
@@ -59,11 +64,13 @@ class UserService:
 
         cls._users[user.id] = user
         cls._email_to_id[user.email] = user.id
+        cls._username_to_id[user.username] = user.id
         cls._next_id += 1
 
         return UserResponse(
             id=user.id,
             email=user.email,
+            username=user.username,
             created_at=user.created_at,
             is_active=user.is_active,
         )
@@ -93,6 +100,13 @@ class UserService:
         return True
 
     @classmethod
+    def get_user_by_username(cls, username: str) -> Optional[User]:
+        user_id = cls._username_to_id.get(username)
+        if user_id:
+            return cls._users.get(user_id)
+        return None
+
+    @classmethod
     def authenticate_user(cls, email: str, password: str) -> Optional[UserResponse]:
         user = cls.get_user_by_email(email)
         if not user:
@@ -102,6 +116,7 @@ class UserService:
         return UserResponse(
             id=user.id,
             email=user.email,
+            username=user.username,
             created_at=user.created_at,
             is_active=user.is_active,
         )
@@ -110,4 +125,5 @@ class UserService:
     def clear_all_users(cls):
         cls._users.clear()
         cls._email_to_id.clear()
+        cls._username_to_id.clear()
         cls._next_id = 1

@@ -15,6 +15,16 @@
 
     <form @submit.prevent="handleRegister">
       <v-text-field
+        v-model="username"
+        label="Username"
+        required
+        :disabled="loading"
+        class="input-field"
+        variant="outlined"
+        :rules="[usernameRule]"
+      />
+
+      <v-text-field
         v-model="email"
         label="Email"
         type="email"
@@ -106,6 +116,7 @@ import {
 
 const router = useRouter();
 
+const username = ref("");
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
@@ -114,6 +125,15 @@ const showConfirmPassword = ref(false);
 const loading = ref(false);
 const errorMessage = ref("");
 const passwordStrength = ref({ level: 0, label: "", color: "#999" });
+
+const usernameRule = (v: string) => {
+  if (!v) return true;
+  const regex = /^[a-zA-Z0-9_]{3,20}$/;
+  return (
+    regex.test(v) ||
+    "Username must be 3-20 characters, letters, numbers and underscore only"
+  );
+};
 
 const hasNumber = computed(() => /\d/.test(password.value));
 const hasLetter = computed(() => /[a-zA-Z]/.test(password.value));
@@ -128,7 +148,14 @@ const strengthPercentage = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  if (!email.value || !password.value || !confirmPassword.value) return false;
+  if (
+    !username.value ||
+    !email.value ||
+    !password.value ||
+    !confirmPassword.value
+  )
+    return false;
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username.value)) return false;
   if (password.value !== confirmPassword.value) return false;
   const validation = validatePasswordStrength(password.value);
   return validation.valid;
@@ -143,6 +170,12 @@ const updatePasswordStrength = () => {
 };
 
 const handleRegister = async () => {
+  if (!username.value || !/^[a-zA-Z0-9_]{3,20}$/.test(username.value)) {
+    errorMessage.value =
+      "Username must be 3-20 characters, letters, numbers and underscore only";
+    return;
+  }
+
   const validation = validatePasswordStrength(password.value);
   if (!validation.valid) {
     errorMessage.value = validation.message;
@@ -166,6 +199,7 @@ const handleRegister = async () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          username: username.value,
           email: email.value,
           password: password.value,
           confirm_password: confirmPassword.value,
